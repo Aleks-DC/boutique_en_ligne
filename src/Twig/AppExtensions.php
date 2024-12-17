@@ -2,18 +2,11 @@
 
 namespace App\Twig;
 
-use App\Repository\CategoryRepository;
 use Twig\Extension\AbstractExtension;
-use Twig\Extension\GlobalsInterface;
 use Twig\TwigFilter;
 
-class AppExtensions extends AbstractExtension implements GlobalsInterface
+class AppExtensions extends AbstractExtension
 {
-	private CategoryRepository $categoryRepository;
-	public function __construct(CategoryRepository $categoryRepository)
-	{
-		$this->categoryRepository = $categoryRepository;
-	}
 	public function getFilters(): array
 	{
 		return [
@@ -25,12 +18,5 @@ class AppExtensions extends AbstractExtension implements GlobalsInterface
 	{
 		return number_format($number, '2', ','). ' €';
 
-	}
-
-	public function getGlobals(): array
-	{
-		return [
-			'allCategories' => $this->categoryRepository->findAll(),
-		];
 	}
 }
