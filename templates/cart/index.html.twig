@@ -20,7 +20,7 @@
                         </div>
                         <div class="col-md-2 text-right">
 
-                            <a href="{{ path('app_cart_decrease', {id : product.object.id} ) }}">- </a><span class="badge text-bg-secondary">x{{ product.quantity }}</span><a href="{{ path('app_cart_add', {id : product.object.id} ) }}"> +</a>
+                            <a href="{{ path('app_cart_decrease', {id : product.object.id} ) }}">-</a> <span class="badge text-bg-secondary">x{{ product.quantity }}</span> <a href="{{ path('app_cart_add', {id : product.object.id} ) }}">+</a>
                         </div>
                         <div class="col-md-2">
                             <strong>{{ (product.quantity * product.object.priceWT)|price }}</strong>
@@ -31,7 +31,19 @@
             </div>
 
             <div class="col-md-4">
-                Récap de mon panier (prix, bouton de validation, ...)
+                <div class="bg-light p-3 rounded-2">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Total produit</span>
+                        <span>{{ fullCartQuantity }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <span class="fw-bold">Prix total TTC</span>
+                        <span>{{ totalWT|price }}</span>
+                    </div>
+
+                    <a href="" class="btn btn-primary mt-3 w-100">Commander</a>
+                </div>
             </div>
 
         </div>

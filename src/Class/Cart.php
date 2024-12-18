@@ -4,22 +4,27 @@ namespace App\Class;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 
-class Cart
+readonly class Cart
 {
-	public function __construct(private readonly RequestStack $requestStack)
+	// Utilisation d'un constructeur pour injecter la stack de requêtes Symfony
+	public function __construct(private RequestStack $requestStack)
 	{
+	}
 
-	}
-	public function getCart()
+	// Récupère le panier actuel depuis la session
+	public function getCart(): ?array // Retourne null ou un tableau
 	{
-		return $this->requestStack->getSession()->get('cart');
+		// Assurez-vous que la session retourne toujours un tableau vide si 'cart' est null
+		return $this->requestStack->getSession()->get('cart', []);
 	}
+
+	// Ajoute un produit au panier
 	public function add($product): void
 	{
-		// Appeler la session de Symfony
-		$cart = $this->requestStack->getSession()->get('cart');
+		// Vérifie si le panier existe et le récupère
+		$cart = $this->getCart();
 
-		// Ajouter une quantité +1 à mon produit
+		// Ajoute le produit ou incrémente la quantité existante
 		if (!empty($cart[$product->getId()])) {
 			$cart[$product->getId()] = [
 				'object' => $product,
@@ -32,26 +37,60 @@ class Cart
 			];
 		}
 
-		// Créer ma session Cart
+		// Sauvegarde le panier mis à jour dans la session
 		$this->requestStack->getSession()->set('cart', $cart);
 	}
 
-	public function decrease ($id): void
+	// Diminue la quantité d'un produit dans le panier
+	public function decrease($id): void
 	{
-		$cart = $this->requestStack->getSession()->get('cart');
+		$cart = $this->getCart();
 
-		// Supprimer une quantité -1 à mon produit
-		if ($cart[$id]['quantity'] > 1) {
-			$cart[$id]['quantity'] = $cart[$id]['quantity'] - 1;
-		} else {
-			unset($cart[$id]);
+		if (isset($cart[$id])) {
+			// Si la quantité est > 1, la décrémente, sinon supprime l'article
+			if ($cart[$id]['quantity'] > 1) {
+				$cart[$id]['quantity']--;
+			} else {
+				unset($cart[$id]);
+			}
+
+			// Met à jour le panier dans la session
+			$this->requestStack->getSession()->set('cart', $cart);
+		}
+	}
+
+	// Calcule la quantité totale de produits dans le panier
+	public function fullQuantity(): int
+	{
+		$cart = $this->getCart();
+		$quantity = 0;
+
+		// Parcourt le panier pour additionner les quantités
+		foreach ($cart as $product) {
+			$quantity += $product['quantity'];
 		}
 
-		$this->requestStack->getSession()->set('cart', $cart);
+		return $quantity;
 	}
 
-	public function remove()
+	// Calcule le prix total WT (With Tax)
+	public function getTotalWT(): float
 	{
-		return $this->requestStack->getSession()->remove('cart');
+		$cart = $this->getCart();
+		$price = 0.0;
+
+		// Parcourt le panier pour calculer le total
+		foreach ($cart as $product) {
+			$price += $product['object']->getPriceWT() * $product['quantity'];
+		}
+
+		return $price;
+	}
+
+	// Supprime le panier de la session
+	public function remove(): void
+	{
+		// Supprime l'entrée 'cart' de la session
+		$this->requestStack->getSession()->remove('cart');
 	}
 }
