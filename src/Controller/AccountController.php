@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Address;
 use App\Form\AddressUserType;
 use App\Form\PasswordUserType;
+use App\Repository\AddressRepository;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,6 +16,11 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AccountController extends AbstractController
 {
+	private $entityManager;
+	public function __construct(EntityManagerInterface $entityManager)
+	{
+		$this->entityManager = $entityManager;
+	}
     #[Route('/compte', name: 'app_account')]
     public function index(): Response
     {
@@ -25,12 +33,30 @@ class AccountController extends AbstractController
 		return $this->render('account/adresses.html.twig');
 	}
 
-	#[Route('/compte/adresse/ajouter', name: 'app_account_address_form')]
-	public function addressForm(Request $request): Response
+	#[Route('/compte/adresse/ajouter/{id}', name: 'app_account_address_form', defaults: ['id' => null])]
+	public function addressForm(Request $request, $id, AddressRepository $addressRepository): Response
 	{
-		$form = $this->createForm(AddressUserType::class);
+		if ($id) {
+			$address = $addressRepository->findOneById($id);
+		} else {
+			$address = new Address();
+			$address->addUser($this->getUser());
+		}
+
+
+		$form = $this->createForm(AddressUserType::class, $address);
 
 		$form->handleRequest($request);
+
+		if ($form->isSubmitted() && $form->isValid()) {
+			$this->entityManager->persist($address);
+			$this->entityManager->flush();
+			$this->addFlash(
+				'success',
+				'Votre adresse a bien été ajoutée');
+
+			return $this->redirectToRoute('app_account_addresses');
+		}
 
 		return $this->render('account/addressForm.html.twig', [
 			'addressForm' => $form->createView(),
@@ -38,7 +64,7 @@ class AccountController extends AbstractController
 	}
 
 	#[Route('/compte/modif-mdp', name: 'app_account_modify_pwd')]
-	public function password(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager): Response
+	public function password(Request $request, UserPasswordHasherInterface $passwordHasher): Response
 	{
 		$user = $this->getUser();
 
@@ -49,8 +75,7 @@ class AccountController extends AbstractController
 		$form->handleRequest($request);
 
 		if ($form->isSubmitted() && $form->isValid()) {
-			$entityManager->flush();
-
+			$this->entityManager->flush();
 			$this->addFlash(
 				'success',
 				'Votre mot de passe a bien été modifié');

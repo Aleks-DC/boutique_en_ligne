@@ -10,8 +10,26 @@
             </div>
 
             <div class="col-md-9">
-                <h5>Mes adresses</h5>
-                <a href="{{ path('app_account_address_form') }}">Ajouter une adresse</a>
+                <div class="d-flex justify-content-between">
+                    <h4>Mes adresses</h4>
+                    <a href="{{ path('app_account_address_form') }}" class="btn btn-outline-primary">Ajouter une adresse</a>
+                </div>
+
+                <div class="row">
+                    {% for address in app.user.addresses %}
+                        <div class="col-md-4 mt-2">
+                            <div class="bg-light rounded-3 p-2 text-center">
+                                <strong>{{ address.firstname }} {{ address.lastname }}</strong><br/>
+                                {{ address.address }}<br/>
+                                {{ address.postal }}<br/>
+                                {{ address.city }}<br/>
+                                {{ address.country }}<br/>
+                                <a href="{{ path('app_account_address_form', {id : address.id}) }}" class="small text-secondary">Éditer</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
             </div>
         </div>
 
